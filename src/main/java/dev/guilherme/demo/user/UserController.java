@@ -1,5 +1,7 @@
 package dev.guilherme.demo.user;
 
+import dev.guilherme.demo.user.dtos.UserDTO;
+import dev.guilherme.demo.user.dtos.UserResponseDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -17,7 +19,7 @@ public class UserController {
     private UserService userService;
 
     @PostMapping
-    public ResponseEntity<UserResponseDTO> create(@Valid @RequestBody UserDTO dto) {
+    public ResponseEntity<UserResponseDTO> saveUser(@Valid @RequestBody UserDTO dto) {
         if (userService.existsByEmail(dto.email())) {
             throw new UserAlreadyExistsException(dto.email());
         }

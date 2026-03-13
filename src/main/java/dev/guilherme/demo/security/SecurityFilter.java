@@ -1,6 +1,7 @@
-package dev.guilherme.demo.auth;
+package dev.guilherme.demo.security;
 
-import dev.guilherme.demo.security.TokenService;
+import dev.guilherme.demo.user.UserService;
+import dev.guilherme.demo.auth.AuthService;
 import jakarta.servlet.*;
 import jakarta.servlet.http.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,13 +14,13 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
 
 @Component
-public class AuthFilter extends OncePerRequestFilter {
-
-    @Autowired
-    private TokenService tokenService;
+public class SecurityFilter extends OncePerRequestFilter {
 
     @Autowired
     private AuthService authService;
+
+    @Autowired
+    private UserService userService;
     @Override
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
@@ -31,11 +32,11 @@ public class AuthFilter extends OncePerRequestFilter {
         }
 
         String token = authHeader.substring(7);
-        String username = tokenService.extractUsername(token);
+        String username = authService.extractUsername(token);
 
         if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            UserDetails userDetails = authService.loadUserByUsername(username);
-            if (tokenService.validateToken(token, userDetails)) {
+            UserDetails userDetails = userService.loadUserByUsername(username);
+            if (authService.validateToken(token, userDetails)) {
                 UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
                         userDetails, null, userDetails.getAuthorities());
                 authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));

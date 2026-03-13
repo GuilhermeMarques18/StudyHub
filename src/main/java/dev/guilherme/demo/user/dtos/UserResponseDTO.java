@@ -1,4 +1,4 @@
-package dev.guilherme.demo.user;
+package dev.guilherme.demo.user.dtos;
 
 import java.time.LocalDateTime;
 
