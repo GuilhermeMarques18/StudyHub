@@ -2,6 +2,8 @@ package dev.guilherme.demo.user;
 
 
 import dev.guilherme.demo.user.dtos.UserDTO;
+import dev.guilherme.demo.user.exception.UserAlreadyExistsException;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -28,7 +30,10 @@ public class UserService implements UserDetailsService {
 
 
     public UserModel saveUser(UserDTO dto) {
-
+        
+        if (existsByEmail(dto.email())) {
+        throw new UserAlreadyExistsException("Email já cadastrado");
+        }   
         UserModel userModel = new UserModel();
 
         userModel.setName(dto.name());
