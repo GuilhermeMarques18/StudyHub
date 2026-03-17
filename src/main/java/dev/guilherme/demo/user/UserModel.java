@@ -1,6 +1,8 @@
 package dev.guilherme.demo.user;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import dev.guilherme.demo.study.StudySession;
+import dev.guilherme.demo.subject.SubjectModel;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.*;
@@ -39,8 +41,14 @@ public class UserModel  implements UserDetails{
     @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private String password;
 
-   @CreationTimestamp
+    @CreationTimestamp
     private LocalDateTime createdDate;
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<SubjectModel> subject;
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<StudySession> studySessions;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
