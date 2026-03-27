@@ -56,6 +56,7 @@ public class AuthController {
         String username = authService.extractUsername(dto.refreshToken());
 
         UserModel user = (UserModel) userService.loadUserByUsername(username);
+        System.out.println("REFRESH TOKEN: " + dto.refreshToken());
 
         return  ResponseEntity.ok(new AuthResponseDTO(
                 authService.generateAccessToken(user),
