@@ -1,5 +1,6 @@
 package dev.guilherme.demo.topic;
 
+import dev.guilherme.demo.study.DifficultyLevel;
 import dev.guilherme.demo.subject.SubjectModel;
 import dev.guilherme.demo.user.UserModel;
 import jakarta.persistence.*;
@@ -16,7 +17,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @EqualsAndHashCode(of = "id")
 @Builder
-public class Topic {
+public class TopicModel {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;

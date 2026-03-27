@@ -1,5 +1,7 @@
 package dev.guilherme.demo.study;
 
 public enum DifficultyLevel {
-    EASY, MEDIUM, HARD
+    EASY,
+    MEDIUM,
+    HARD
 }

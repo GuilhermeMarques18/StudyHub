@@ -1,7 +1,11 @@
 package dev.guilherme.demo.user;
 
+
 import dev.guilherme.demo.user.dtos.UserDTO;
 import dev.guilherme.demo.user.dtos.UserResponseDTO;
+import dev.guilherme.demo.user.usergoal.dtos.GoalResponseDTO;
+import dev.guilherme.demo.user.usergoal.dtos.GoalUpdateDTO;
+import dev.guilherme.demo.user.usergoal.UserGoalService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -12,11 +16,14 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping("/api/users")
+@RequestMapping("/users")
 public class UserController {
 
     @Autowired
     private UserService userService;
+
+    @Autowired
+    private UserGoalService userGoalService;
 
     @PostMapping
     public ResponseEntity<UserResponseDTO> saveUser(@Valid @RequestBody UserDTO dto) {
@@ -52,6 +59,17 @@ public class UserController {
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         userService.deleteUser(id);
         return ResponseEntity.noContent().build();
+    }
+
+
+    @PutMapping("/goals")
+    public ResponseEntity<GoalResponseDTO> updateGoal(@RequestBody GoalUpdateDTO dto) {
+        return ResponseEntity.ok(userGoalService.updateGoal(dto));
+    }
+
+    @GetMapping("/goals")
+    public ResponseEntity<GoalResponseDTO> getGoal() {
+        return ResponseEntity.ok(userGoalService.getCurrentGoal());
     }
 
     private UserResponseDTO toDto(UserModel user) {

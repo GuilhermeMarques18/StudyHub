@@ -4,6 +4,7 @@ package dev.guilherme.demo.auth;
 import dev.guilherme.demo.auth.dtos.AuthDTO;
 import dev.guilherme.demo.auth.dtos.AuthRefreshDTO;
 import dev.guilherme.demo.auth.dtos.AuthResponseDTO;
+import dev.guilherme.demo.auth.exception.UserNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.*;
@@ -52,21 +53,14 @@ public class AuthController {
 
     @PostMapping("/refresh")
     public ResponseEntity<AuthResponseDTO> refresh(@RequestBody AuthRefreshDTO dto) {
-        String refreshToken = dto.refreshToken();
-        String username = authService.extractUsername(refreshToken);
+        String username = authService.extractUsername(dto.refreshToken());
 
         UserModel user = (UserModel) userService.loadUserByUsername(username);
 
-        if (!authService.validateToken(refreshToken, user)) {
-            return ResponseEntity.status(401).build();
-        }
-
-        String newAccessToken = authService.generateAccessToken(user);
-        String newRefreshToken = authService.generateRefreshToken(user);
-
-        return ResponseEntity.ok(
-                new AuthResponseDTO(newAccessToken, newRefreshToken, "Bearer")
-        );
+        return  ResponseEntity.ok(new AuthResponseDTO(
+                authService.generateAccessToken(user),
+                authService.generateRefreshToken(user),
+                "Bearer"));
     }
     @GetMapping("/me")
     public ResponseEntity<UserResponseDTO> myProfile(Authentication authentication) {

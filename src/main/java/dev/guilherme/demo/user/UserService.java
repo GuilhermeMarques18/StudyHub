@@ -1,9 +1,9 @@
 package dev.guilherme.demo.user;
 
 
+
 import dev.guilherme.demo.user.dtos.UserDTO;
 import dev.guilherme.demo.user.exception.UserAlreadyExistsException;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -12,6 +12,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+
 
 @Service
 public class UserService implements UserDetailsService {
@@ -60,16 +61,6 @@ public class UserService implements UserDetailsService {
 
         return userRepository.save(userModel);
     }
-
-    public void changePassword(Long id, String newPassword) {
-
-        UserModel userModel = findById(id);
-
-        userModel.setPassword(passwordEncoder.encode(newPassword));
-
-        userRepository.save(userModel);
-    }
-
 
     public List<UserModel> findAll() {
         return userRepository.findAll();

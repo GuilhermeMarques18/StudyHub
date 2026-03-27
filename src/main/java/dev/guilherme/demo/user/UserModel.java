@@ -1,8 +1,10 @@
 package dev.guilherme.demo.user;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import dev.guilherme.demo.friend.Friendship;
 import dev.guilherme.demo.study.StudySession;
 import dev.guilherme.demo.subject.SubjectModel;
+import dev.guilherme.demo.user.usergoal.UserGoalModel;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.*;
@@ -44,11 +46,20 @@ public class UserModel  implements UserDetails{
     @CreationTimestamp
     private LocalDateTime createdDate;
 
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private UserGoalModel userGoal;
+
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<SubjectModel> subject;
+    private List<SubjectModel> subjects;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<StudySession> studySessions;
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    private List<Friendship> friendships;
+
+    @OneToMany(mappedBy =  "friend", cascade = CascadeType.ALL)
+    private List<Friendship> receivedFriendships;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

@@ -1,9 +1,8 @@
 package dev.guilherme.demo.auth;
 
 
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
+import dev.guilherme.demo.auth.exception.TokenInvalidException;
+import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -48,7 +47,11 @@ public class AuthService {
     }
 
     public String extractUsername(String token) {
-        return parseClaims(token).getSubject();
+        String subject = parseClaims(token).getSubject();
+        if(subject == null){
+            throw new TokenInvalidException("O token não contém um identificador de usuário");
+        }
+        return subject;
     }
 
     public boolean validateToken(String token, UserDetails userDetails) {
@@ -62,10 +65,16 @@ public class AuthService {
     }
 
     private Claims parseClaims(String token) {
-        return Jwts.parserBuilder()
-                .setSigningKey(getSigningKey())
-                .build()
-                .parseClaimsJws(token)
-                .getBody();
+        try {
+            return Jwts.parserBuilder()
+                    .setSigningKey(getSigningKey())
+                    .build()
+                    .parseClaimsJws(token)
+                    .getBody();
+        } catch(ExpiredJwtException e){
+            throw new TokenInvalidException("Token expirado");
+        } catch (JwtException | IllegalArgumentException e){
+            throw new TokenInvalidException("Token invalido");
+        }
     }
 }
