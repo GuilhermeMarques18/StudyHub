@@ -14,13 +14,13 @@ import java.util.Date;
 @Service
 public class AuthService {
 
-    @Value("${app.jwt.secret}")
+    @Value("${APP_JWT_SECRET}")
     private String jwtSecret;
 
-    @Value("${app.jwt.expiration}")
+    @Value("${APP_JWT_EXPIRATION}")
     private long jwtExpirationMs;
 
-    @Value("${app.jwt.refresh.expiration}")
+    @Value("${APP_JWT_REFRESH}")
     private long jwtRefreshMs;
 
     private Key getSigningKey() {
