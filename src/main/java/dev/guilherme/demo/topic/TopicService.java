@@ -2,16 +2,17 @@ package dev.guilherme.demo.topic;
 
 import dev.guilherme.demo.study.DifficultyLevel;
 import dev.guilherme.demo.subject.SubjectModel;
-import dev.guilherme.demo.subject.SubjectRepository;
+import dev.guilherme.demo.subject.SubjectService;
 import dev.guilherme.demo.topic.dtos.TopicDTO;
 import dev.guilherme.demo.topic.dtos.TopicResponseDTO;
+import dev.guilherme.demo.topic.exception.TopicNotFoundException;
 import dev.guilherme.demo.user.UserModel;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -19,16 +20,16 @@ import java.util.stream.Collectors;
 public class TopicService {
 
     private final TopicRepository topicRepository;
-    private final SubjectRepository subjectRepository;
+
+    private final SubjectService subjectService;
 
     public TopicResponseDTO save(TopicDTO dto) {
         UserModel user = getCurrentUser();
 
-        SubjectModel subject = subjectRepository.findById(dto.subject())
-                .orElseThrow(() -> new RuntimeException("Matéria não encontrada"));
+        SubjectModel subject = subjectService.findById(dto.subject());
 
         if (!subject.getUser().getId().equals(user.getId())) {
-            throw new RuntimeException("Acesso negado");
+            throw new AccessDeniedException("Acesso negado");
         }
 
         TopicModel topic = TopicModel.builder()
@@ -45,18 +46,25 @@ public class TopicService {
     }
 
     public List<TopicResponseDTO> getBySubject(Long subjectId) {
+        UserModel user = getCurrentUser();
+        SubjectModel subject = subjectService.findById(subjectId);
+
+        if (!subject.getUser().getId().equals(user.getId())) {
+            throw new AccessDeniedException("Acesso negado");
+        }
+
         return topicRepository.findBySubjectIdOrderByName(subjectId)
                 .stream().map(this::toResponse)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     public TopicResponseDTO complete(Long id) {
         UserModel user = getCurrentUser();
         TopicModel topic = topicRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Tópico não encontrado"));
+                .orElseThrow(() -> new TopicNotFoundException(id));
 
         if (!topic.getUser().getId().equals(user.getId())) {
-            throw new RuntimeException("Acesso negado");
+            throw new AccessDeniedException("Acesso negado");
         }
 
         topic.setCompleted(true);
@@ -78,4 +86,32 @@ public class TopicService {
                 topic.getSubject().getId()
         );
     }
+
+    public TopicModel findById(Long id) {
+        TopicModel topic = topicRepository.findById(id)
+                .orElseThrow(() -> new TopicNotFoundException(id));
+
+        if (!topic.getUser().getId().equals(getCurrentUser().getId())) {
+            throw new AccessDeniedException("Acesso negado");
+        }
+        return topic;
+    }
+
+    public TopicResponseDTO update(Long id, TopicDTO dto) {
+        TopicModel topic = findById(id);
+
+        topic.setName(dto.name());
+        topic.setDescription(dto.description());
+        topic.setEstimatedHours(dto.estimatedHours() != null ? dto.estimatedHours() : topic.getEstimatedHours());
+        topic.setDifficultyLevel(dto.difficultyLevel() != null ? dto.difficultyLevel() : topic.getDifficultyLevel());
+
+        return toResponse(topicRepository.save(topic));
+    }
+
+    public void delete(Long id) {
+        TopicModel topic = findById(id);
+        topicRepository.delete(topic);
+    }
+
+
 }

@@ -30,4 +30,15 @@ public class TopicController {
     public ResponseEntity<TopicResponseDTO> complete(@PathVariable Long id) {
         return ResponseEntity.ok(topicService.complete(id));
     }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<TopicResponseDTO> update(@PathVariable Long id, @Valid @RequestBody TopicDTO dto) {
+        return ResponseEntity.ok(topicService.update(id, dto));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
+        topicService.delete(id);
+        return ResponseEntity.noContent().build();
+    }
 }

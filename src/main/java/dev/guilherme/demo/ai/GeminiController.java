@@ -2,6 +2,7 @@ package dev.guilherme.demo.ai;
 
 import dev.guilherme.demo.ai.dto.PromptRequestDTO;
 import lombok.RequiredArgsConstructor;
+
 import org.springframework.web.bind.annotation.*;
 
 @RestController
