@@ -15,6 +15,9 @@ public interface StudySessionRepository extends JpaRepository<StudySession, Long
 
     List<StudySession> findBySubjectId(Long subjectId);
 
+    @Query("SELECT s.subject.id, SUM(s.durationMinutes) FROM StudySession s WHERE s.subject.id IN :ids GROUP BY s.subject.id")
+    List<Object[]> sumDurationBySubjectIds(@Param("ids") List<Long> subjectIds);
+
     @Query("SELECT SUM(s.durationMinutes) FROM StudySession s " +
             "WHERE s.user.id = :userId " +
             "AND s.startTime >= :startOfWeek " +

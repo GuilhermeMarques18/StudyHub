@@ -25,4 +25,20 @@ public class SubjectController {
     public ResponseEntity<List<SubjectResponseDTO>> getAll() {
         return ResponseEntity.ok(subjectService.getAll());
     }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<SubjectResponseDTO> getById(@PathVariable Long id) {
+        return ResponseEntity.ok(subjectService.getById(id));
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<SubjectResponseDTO> update(@PathVariable Long id, @Valid @RequestBody SubjectDTO dto) {
+        return ResponseEntity.ok(subjectService.update(id, dto));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
+        subjectService.delete(id);
+        return ResponseEntity.noContent().build();
+    }
 }
