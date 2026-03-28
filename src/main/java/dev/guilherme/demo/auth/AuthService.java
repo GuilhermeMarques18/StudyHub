@@ -1,11 +1,17 @@
 package dev.guilherme.demo.auth;
 
 
+import dev.guilherme.demo.auth.dtos.ChangePasswordDTO;
 import dev.guilherme.demo.auth.exception.TokenInvalidException;
+import dev.guilherme.demo.user.UserModel;
+import dev.guilherme.demo.user.UserRepository;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import java.nio.charset.StandardCharsets;
 import java.security.Key;
@@ -22,6 +28,12 @@ public class AuthService {
 
     @Value("${APP_JWT_REFRESH}")
     private long jwtRefreshMs;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
+    @Autowired
+    private UserRepository userRepository;
 
     private Key getSigningKey() {
         byte[] keyBytes = jwtSecret.getBytes(StandardCharsets.UTF_8);
@@ -77,4 +89,15 @@ public class AuthService {
             throw new TokenInvalidException("Token invalido");
         }
     }
+
+    public void changePassword(UserModel user, ChangePasswordDTO dto) {
+        if (!passwordEncoder.matches(dto.oldPassword(), user.getPassword())) {
+            throw new BadCredentialsException("Senha atual incorreta");
+        }
+
+        user.setPassword(passwordEncoder.encode(dto.newPassword()));
+        userRepository.save(user);
+    }
+
+
 }

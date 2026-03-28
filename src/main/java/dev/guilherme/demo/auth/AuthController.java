@@ -4,7 +4,8 @@ package dev.guilherme.demo.auth;
 import dev.guilherme.demo.auth.dtos.AuthDTO;
 import dev.guilherme.demo.auth.dtos.AuthRefreshDTO;
 import dev.guilherme.demo.auth.dtos.AuthResponseDTO;
-import dev.guilherme.demo.auth.exception.UserNotFoundException;
+import dev.guilherme.demo.auth.dtos.ChangePasswordDTO;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.*;
@@ -69,6 +70,17 @@ public class AuthController {
             return ResponseEntity.status(401).build();
         }
         return ResponseEntity.ok(toDto(user));
+    }
+
+    @PutMapping("/change-password")
+    public ResponseEntity<Void> changePassword(@RequestBody @Valid ChangePasswordDTO dto, Authentication authentication) {
+
+        if (authentication == null || !(authentication.getPrincipal() instanceof UserModel user)) {
+            return ResponseEntity.status(401).build();
+        }
+
+        authService.changePassword(user, dto);
+        return ResponseEntity.noContent().build();
     }
 
     private UserResponseDTO toDto(UserModel user) {

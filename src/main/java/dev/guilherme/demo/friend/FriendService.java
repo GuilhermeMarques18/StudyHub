@@ -7,7 +7,6 @@ import dev.guilherme.demo.study.StudySessionRepository;
 import dev.guilherme.demo.user.UserModel;
 import dev.guilherme.demo.user.UserService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

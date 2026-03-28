@@ -1,7 +1,6 @@
 package dev.guilherme.demo.user;
 
-
-
+import dev.guilherme.demo.user.dtos.UpdateUserDTO;
 import dev.guilherme.demo.user.dtos.UserDTO;
 import dev.guilherme.demo.user.exception.UserAlreadyExistsException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -54,7 +53,7 @@ public class UserService implements UserDetailsService {
 
     }
 
-    public UserModel updateUser(Long id, UserDTO dto) {
+    public UserModel updateUser(Long id, UpdateUserDTO dto) {
         UserModel userModel = findById(id);
         userModel.setName(dto.name());
         userModel.setEmail(dto.email());

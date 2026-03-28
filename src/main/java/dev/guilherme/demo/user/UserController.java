@@ -1,6 +1,7 @@
 package dev.guilherme.demo.user;
 
 
+import dev.guilherme.demo.user.dtos.UpdateUserDTO;
 import dev.guilherme.demo.user.dtos.UserDTO;
 import dev.guilherme.demo.user.dtos.UserResponseDTO;
 import dev.guilherme.demo.user.usergoal.dtos.GoalResponseDTO;
@@ -9,7 +10,7 @@ import dev.guilherme.demo.user.usergoal.UserGoalService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import dev.guilherme.demo.user.exception.UserAlreadyExistsException;
+
 
 import jakarta.validation.Valid;
 import java.util.List;
@@ -27,10 +28,6 @@ public class UserController {
 
     @PostMapping
     public ResponseEntity<UserResponseDTO> saveUser(@Valid @RequestBody UserDTO dto) {
-        if (userService.existsByEmail(dto.email())) {
-            throw new UserAlreadyExistsException(dto.email());
-        }
-
         UserModel saved = userService.saveUser(dto);
         return ResponseEntity.ok(toDto(saved));
     }
@@ -50,7 +47,7 @@ public class UserController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<UserResponseDTO> update(@PathVariable Long id, @Valid @RequestBody UserDTO dto) {
+    public ResponseEntity<UserResponseDTO> update(@PathVariable Long id, @Valid @RequestBody UpdateUserDTO dto) {
         UserModel updated = userService.updateUser(id, dto);
         return ResponseEntity.ok(toDto(updated));
     }
