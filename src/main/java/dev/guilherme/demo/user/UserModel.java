@@ -2,7 +2,7 @@ package dev.guilherme.demo.user;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import dev.guilherme.demo.friend.Friendship;
-import dev.guilherme.demo.study.StudySession;
+import dev.guilherme.demo.study.StudySessionModel;
 import dev.guilherme.demo.subject.SubjectModel;
 import dev.guilherme.demo.user.usergoal.UserGoalModel;
 import jakarta.persistence.*;
@@ -53,7 +53,7 @@ public class UserModel  implements UserDetails{
     private List<SubjectModel> subjects;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<StudySession> studySessions;
+    private List<StudySessionModel> studySessions;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     private List<Friendship> friendships;

@@ -18,8 +18,8 @@ public interface FriendRepository extends JpaRepository<Friendship, Long> {
         CAST(COALESCE(SUM(s.durationMinutes)/60.0, 0.0) AS DOUBLE)
     )
     FROM UserModel u
-    LEFT JOIN StudySession s 
-        ON s.user.id = u.id 
+    LEFT JOIN StudySessionModel s
+        ON s.user.id = u.id
         AND s.startTime >= :startOfWeek
     GROUP BY u.id, u.name
     ORDER BY SUM(s.durationMinutes) DESC

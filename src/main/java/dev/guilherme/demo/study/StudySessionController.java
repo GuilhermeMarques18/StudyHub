@@ -11,24 +11,35 @@ import java.util.List;
 @RestController
 @RequestMapping("/study")
 @RequiredArgsConstructor
-public class StudyController {
+public class StudySessionController {
 
-    private final StudyService studyService;
+    private final StudySessionService studySessionService;
 
     @PostMapping("/sessions")
     public ResponseEntity<StudySessionResponseDTO> saveSession(
             @Valid @RequestBody StudySessionDTO dto) {
-        return ResponseEntity.ok(studyService.createSession(dto));
+        return ResponseEntity.ok(studySessionService.createSession(dto));
     }
 
     @GetMapping("/sessions")
     public ResponseEntity<List<StudySessionResponseDTO>> getMySessions() {
-        return ResponseEntity.ok(studyService.getSessionsByUser());
+        return ResponseEntity.ok(studySessionService.getSessionsByUser());
     }
 
     @GetMapping("/sessions/subject/{subjectId}")
     public ResponseEntity<List<StudySessionResponseDTO>> getSessionsBySubject(
             @PathVariable Long subjectId) {
-        return ResponseEntity.ok(studyService.getSessionsBySubject(subjectId));
+        return ResponseEntity.ok(studySessionService.getSessionsBySubject(subjectId));
+    }
+
+    @PutMapping("/sessions/{id}")
+    public ResponseEntity<StudySessionResponseDTO> updateSession(@PathVariable Long id, @Valid @RequestBody StudySessionDTO dto) {
+        return ResponseEntity.ok(studySessionService.updateSession(id, dto));
+    }
+
+    @DeleteMapping("/sessions/{id}")
+    public ResponseEntity<Void> deleteSession(@PathVariable Long id) {
+        studySessionService.delete(id);
+        return ResponseEntity.noContent().build();
     }
 }
