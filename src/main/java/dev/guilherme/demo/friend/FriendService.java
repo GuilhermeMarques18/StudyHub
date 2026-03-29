@@ -3,10 +3,13 @@ package dev.guilherme.demo.friend;
 import dev.guilherme.demo.friend.dtos.FriendRequestDTO;
 import dev.guilherme.demo.friend.dtos.FriendResponseDTO;
 import dev.guilherme.demo.friend.dtos.RankingDTO;
+import dev.guilherme.demo.friend.exception.FriendShipException;
+import dev.guilherme.demo.friend.exception.FriendshipNotFoundException;
 import dev.guilherme.demo.study.StudySessionRepository;
 import dev.guilherme.demo.user.UserModel;
 import dev.guilherme.demo.user.UserService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -30,10 +33,9 @@ public class FriendService {
         UserModel user = getCurrentUser();
         UserModel friend = userService.findById(dto.friendId());
 
-
         if (user.getId().equals(friend.getId()) ||
                 friendRepository.findByUserIdAndFriendId(user.getId(), friend.getId()).isPresent()) {
-            throw new RuntimeException("Amizade inválida");
+            throw new FriendShipException("Amizade inválida");
         }
 
         Friendship friendship = Friendship.builder()
@@ -43,16 +45,15 @@ public class FriendService {
                 .build();
 
         Friendship saved = friendRepository.save(friendship);
-        return toResponse(saved);
+        return toResponse(saved, user);
     }
 
     public List<FriendResponseDTO> acceptRequest(Long requestId) {
         UserModel user = getCurrentUser();
-        Friendship friendship = friendRepository.findById(requestId)
-                .orElseThrow(() -> new RuntimeException("Pedido não encontrado"));
+        Friendship friendship = findFriendshipById(requestId);
 
         if (!friendship.getFriend().getId().equals(user.getId())) {
-            throw new RuntimeException("Apenas destinatário pode aceitar");
+            throw new AccessDeniedException("Apenas o destinatário pode aceitar");
         }
 
         friendship.setStatus(Friendship.Status.ACCEPTED);
@@ -61,30 +62,61 @@ public class FriendService {
         return getFriends();
     }
 
+    public void rejectRequest(Long requestId) {
+        UserModel user = getCurrentUser();
+        Friendship friendship = findFriendshipById(requestId);
+
+        if (!friendship.getFriend().getId().equals(user.getId())) {
+            throw new AccessDeniedException("Apenas o destinatário pode rejeitar");
+        }
+
+        friendRepository.delete(friendship);
+    }
+
+    public void removeFriend(Long friendshipId) {
+        UserModel user = getCurrentUser();
+        Friendship friendship = findFriendshipById(friendshipId);
+
+        if (!friendship.getUser().getId().equals(user.getId()) && !friendship.getFriend().getId().equals(user.getId())) {
+            throw new AccessDeniedException("Acesso negado");
+        }
+
+        friendRepository.delete(friendship);
+    }
+
     public List<FriendResponseDTO> getFriends() {
         UserModel user = getCurrentUser();
         List<Friendship> friendships = friendRepository.findByUserIdOrFriendId(user.getId(), user.getId());
 
         return friendships.stream()
                 .filter(f -> f.getStatus() == Friendship.Status.ACCEPTED)
-                .map(this::toResponseWithStats)
+                .map(f -> toResponseWithStats(f, user))
                 .collect(Collectors.toList());
     }
 
-    public List<RankingDTO> getWeeklyRanking() {
-        LocalDateTime startOfWeek = LocalDateTime.now().minusDays(LocalDateTime.now().getDayOfWeek().getValue() - 1).withHour(0).withMinute(0).withSecond(0);
-        return friendRepository.getWeeklyRanking(startOfWeek);
+    private Friendship findFriendshipById(Long id) {
+        return friendRepository.findById(id)
+                .orElseThrow(() -> new FriendshipNotFoundException(id));
     }
 
-    private FriendResponseDTO toResponseWithStats(Friendship friendship) {
-        UserModel friend = friendship.getFriend().equals(getCurrentUser()) ?
+    public List<RankingDTO> getWeeklyRanking() {
+        return friendRepository.getWeeklyRanking(getStartOfWeek());
+    }
+
+    private LocalDateTime getStartOfWeek() {
+        return LocalDateTime.now()
+                .minusDays(LocalDateTime.now().getDayOfWeek().getValue() - 1)
+                .withHour(0).withMinute(0).withSecond(0).withNano(0);
+    }
+
+    private FriendResponseDTO toResponseWithStats(Friendship friendship, UserModel currentUser) {
+        UserModel friend = friendship.getFriend().equals(currentUser) ?
                 friendship.getUser() : friendship.getFriend();
 
-        LocalDateTime startOfWeek = LocalDateTime.now().minusDays(LocalDateTime.now().getDayOfWeek().getValue() - 1).withHour(0).withMinute(0).withSecond(0);
+        LocalDateTime startOfWeek = getStartOfWeek();
         LocalDateTime endOfWeek = startOfWeek.plusDays(7);
         Integer weeklyMinutes = studySessionRepository.getWeeklyMinutes(friend.getId(), startOfWeek, endOfWeek);
         Double weeklyHours = (weeklyMinutes != null) ? weeklyMinutes / 60.0 : 0.0;
-        Integer position = getRankingPosition(friend.getId());
 
         return new FriendResponseDTO(
                 friendship.getId(),
@@ -92,13 +124,12 @@ public class FriendService {
                 friend.getName(),
                 friend.getEmail(),
                 weeklyHours,
-                position,
                 friendship.getCreatedAt()
         );
     }
 
-    private FriendResponseDTO toResponse(Friendship friendship) {
-        UserModel friend = friendship.getFriend().equals(getCurrentUser()) ?
+    private FriendResponseDTO toResponse(Friendship friendship, UserModel currentUser) {
+        UserModel friend = friendship.getFriend().equals(currentUser) ?
                 friendship.getUser() : friendship.getFriend();
 
         return new FriendResponseDTO(
@@ -107,13 +138,8 @@ public class FriendService {
                 friend.getName(),
                 friend.getEmail(),
                 0.0,
-                null,
                 friendship.getCreatedAt()
         );
-    }
-
-    private Integer getRankingPosition(Long userId) {
-        return (int) (Math.random() * 10 + 1);
     }
 
     private UserModel getCurrentUser() {

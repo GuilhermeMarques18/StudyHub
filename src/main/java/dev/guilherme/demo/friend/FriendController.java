@@ -35,4 +35,16 @@ public class FriendController {
     public ResponseEntity<List<RankingDTO>> getRanking() {
         return ResponseEntity.ok(friendService.getWeeklyRanking());
     }
+
+    @DeleteMapping("/request/{requestId}/reject")
+    public ResponseEntity<Void> rejectRequest(@PathVariable Long requestId) {
+        friendService.rejectRequest(requestId);
+        return ResponseEntity.noContent().build();
+    }
+
+    @DeleteMapping("/{friendshipId}")
+    public ResponseEntity<Void> deleteFriendship(@PathVariable Long friendshipId) {
+        friendService.removeFriend(friendshipId);
+        return ResponseEntity.noContent().build();
+    }
 }

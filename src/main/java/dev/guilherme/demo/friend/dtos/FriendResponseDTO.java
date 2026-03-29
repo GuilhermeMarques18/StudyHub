@@ -8,6 +8,5 @@ public record FriendResponseDTO(
         String friendName,
         String friendEmail,
         Double weeklyHours,
-        Integer position,
         LocalDateTime createdAt
 ) {}
