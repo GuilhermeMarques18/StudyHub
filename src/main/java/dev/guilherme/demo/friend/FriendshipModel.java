@@ -14,7 +14,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Builder
 @EqualsAndHashCode(of = "id")
-public class Friendship {
+public class FriendshipModel {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

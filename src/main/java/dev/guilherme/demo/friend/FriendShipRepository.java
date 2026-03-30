@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
-public interface FriendRepository extends JpaRepository<Friendship, Long> {
+public interface FriendShipRepository extends JpaRepository<FriendshipModel, Long> {
 
     @Query("""
     SELECT new dev.guilherme.demo.friend.dtos.RankingDTO(
@@ -26,8 +26,8 @@ public interface FriendRepository extends JpaRepository<Friendship, Long> {
 """)
     List<RankingDTO> getWeeklyRanking(@Param("startOfWeek") LocalDateTime startOfWeek);
 
-    Optional<Friendship> findByUserIdAndFriendId(Long userId, Long friendId);
+    Optional<FriendshipModel> findByUserIdAndFriendId(Long userId, Long friendId);
 
-    @Query("SELECT f FROM Friendship f WHERE (f.user.id = :userId OR f.friend.id = :userId)")
-    List<Friendship> findByUserIdOrFriendId(@Param("userId") Long userId, @Param("userId") Long friendId);
+    @Query("SELECT f FROM FriendshipModel f WHERE (f.user.id = :userId OR f.friend.id = :userId)")
+    List<FriendshipModel> findByUserIdOrFriendId(@Param("userId") Long userId, @Param("userId") Long friendId);
 }

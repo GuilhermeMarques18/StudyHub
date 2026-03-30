@@ -21,9 +21,9 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 @Transactional
-public class FriendService {
+public class FriendShipService {
 
-    private final FriendRepository friendRepository;
+    private final FriendShipRepository friendRepository;
 
     private final UserService userService;
 
@@ -38,25 +38,25 @@ public class FriendService {
             throw new FriendShipException("Amizade inválida");
         }
 
-        Friendship friendship = Friendship.builder()
+        FriendshipModel friendship = FriendshipModel.builder()
                 .user(user)
                 .friend(friend)
-                .status(Friendship.Status.PENDING)
+                .status(FriendshipModel.Status.PENDING)
                 .build();
 
-        Friendship saved = friendRepository.save(friendship);
+        FriendshipModel saved = friendRepository.save(friendship);
         return toResponse(saved, user);
     }
 
     public List<FriendResponseDTO> acceptRequest(Long requestId) {
         UserModel user = getCurrentUser();
-        Friendship friendship = findFriendshipById(requestId);
+        FriendshipModel friendship = findFriendshipById(requestId);
 
         if (!friendship.getFriend().getId().equals(user.getId())) {
             throw new AccessDeniedException("Apenas o destinatário pode aceitar");
         }
 
-        friendship.setStatus(Friendship.Status.ACCEPTED);
+        friendship.setStatus(FriendshipModel.Status.ACCEPTED);
         friendRepository.save(friendship);
 
         return getFriends();
@@ -64,7 +64,7 @@ public class FriendService {
 
     public void rejectRequest(Long requestId) {
         UserModel user = getCurrentUser();
-        Friendship friendship = findFriendshipById(requestId);
+        FriendshipModel friendship = findFriendshipById(requestId);
 
         if (!friendship.getFriend().getId().equals(user.getId())) {
             throw new AccessDeniedException("Apenas o destinatário pode rejeitar");
@@ -75,7 +75,7 @@ public class FriendService {
 
     public void removeFriend(Long friendshipId) {
         UserModel user = getCurrentUser();
-        Friendship friendship = findFriendshipById(friendshipId);
+        FriendshipModel friendship = findFriendshipById(friendshipId);
 
         if (!friendship.getUser().getId().equals(user.getId()) && !friendship.getFriend().getId().equals(user.getId())) {
             throw new AccessDeniedException("Acesso negado");
@@ -86,15 +86,15 @@ public class FriendService {
 
     public List<FriendResponseDTO> getFriends() {
         UserModel user = getCurrentUser();
-        List<Friendship> friendships = friendRepository.findByUserIdOrFriendId(user.getId(), user.getId());
+        List<FriendshipModel> friendships = friendRepository.findByUserIdOrFriendId(user.getId(), user.getId());
 
         return friendships.stream()
-                .filter(f -> f.getStatus() == Friendship.Status.ACCEPTED)
+                .filter(f -> f.getStatus() == FriendshipModel.Status.ACCEPTED)
                 .map(f -> toResponseWithStats(f, user))
                 .collect(Collectors.toList());
     }
 
-    private Friendship findFriendshipById(Long id) {
+    private FriendshipModel findFriendshipById(Long id) {
         return friendRepository.findById(id)
                 .orElseThrow(() -> new FriendshipNotFoundException(id));
     }
@@ -109,7 +109,7 @@ public class FriendService {
                 .withHour(0).withMinute(0).withSecond(0).withNano(0);
     }
 
-    private FriendResponseDTO toResponseWithStats(Friendship friendship, UserModel currentUser) {
+    private FriendResponseDTO toResponseWithStats(FriendshipModel friendship, UserModel currentUser) {
         UserModel friend = friendship.getFriend().equals(currentUser) ?
                 friendship.getUser() : friendship.getFriend();
 
@@ -128,7 +128,7 @@ public class FriendService {
         );
     }
 
-    private FriendResponseDTO toResponse(Friendship friendship, UserModel currentUser) {
+    private FriendResponseDTO toResponse(FriendshipModel friendship, UserModel currentUser) {
         UserModel friend = friendship.getFriend().equals(currentUser) ?
                 friendship.getUser() : friendship.getFriend();
 

@@ -1,7 +1,7 @@
 package dev.guilherme.demo.user;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import dev.guilherme.demo.friend.Friendship;
+import dev.guilherme.demo.friend.FriendshipModel;
 import dev.guilherme.demo.study.StudySessionModel;
 import dev.guilherme.demo.subject.SubjectModel;
 import dev.guilherme.demo.user.usergoal.UserGoalModel;
@@ -56,10 +56,10 @@ public class UserModel  implements UserDetails{
     private List<StudySessionModel> studySessions;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
-    private List<Friendship> friendships;
+    private List<FriendshipModel> friendships;
 
     @OneToMany(mappedBy =  "friend", cascade = CascadeType.ALL)
-    private List<Friendship> receivedFriendships;
+    private List<FriendshipModel> receivedFriendships;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

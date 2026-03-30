@@ -12,9 +12,9 @@ import java.util.List;
 @RestController
 @RequestMapping("/friends")
 @RequiredArgsConstructor
-public class FriendController {
+public class FriendShipController {
 
-    private final FriendService friendService;
+    private final FriendShipService friendService;
 
     @PostMapping("/request")
     public ResponseEntity<FriendResponseDTO> sendRequest(@RequestBody FriendRequestDTO dto) {
