@@ -4,6 +4,7 @@ import dev.guilherme.demo.study.StudySessionRepository;
 import dev.guilherme.demo.user.UserModel;
 import dev.guilherme.demo.user.usergoal.dtos.GoalResponseDTO;
 import dev.guilherme.demo.user.usergoal.dtos.GoalUpdateDTO;
+import dev.guilherme.demo.user.usergoal.exception.GoalNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -23,8 +24,7 @@ public class UserGoalService {
 
     public GoalResponseDTO getCurrentGoal() {
         UserModel user = getCurrentUser();
-        UserGoalModel goal = userGoalRepository.findByUser(user)
-                .orElseThrow(() -> new RuntimeException("Meta não encontrada"));
+        UserGoalModel goal = getOrCreateGoal(user);
 
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime startOfDay = now.toLocalDate().atStartOfDay();
@@ -48,12 +48,10 @@ public class UserGoalService {
 
         Double weekProgress = goal.getWeeklyGoal() > 0
                 ? (weekHours / goal.getWeeklyGoal()) * 100
-                : 0;
+                : 0.0;
         Double dailyProgress = goal.getDailyGoal() > 0
                 ? (dailyHours / goal.getDailyGoal()) * 100
-                : 0;
-
-        String status = getStatus(weekProgress, dailyProgress);
+                : 0.0;
 
         return new GoalResponseDTO(
                 goal.getId(),
@@ -61,19 +59,37 @@ public class UserGoalService {
                 goal.getDailyGoal(),
                 weekProgress,
                 dailyProgress,
-                status
+                getStatus(weekProgress, dailyProgress)
         );
     }
 
     public GoalResponseDTO updateGoal(GoalUpdateDTO dto) {
         UserModel user = getCurrentUser();
-        UserGoalModel goal = userGoalRepository.findByUser(user)
-                .orElseThrow(() -> new RuntimeException("Meta não encontrada"));
+        UserGoalModel goal = getOrCreateGoal(user);
 
         goal.setWeeklyGoal(dto.weeklyGoal());
         goal.setDailyGoal(dto.dailyGoal());
+        userGoalRepository.save(goal);
 
         return getCurrentGoal();
+    }
+
+    public void deleteGoal() {
+        UserModel user = getCurrentUser();
+        UserGoalModel goal = userGoalRepository.findByUser(user)
+                .orElseThrow(GoalNotFoundException::new);
+        userGoalRepository.delete(goal);
+    }
+
+    private UserGoalModel getOrCreateGoal(UserModel user) {
+        return userGoalRepository.findByUser(user)
+                .orElseGet(() -> {
+                    UserGoalModel defaultGoal = new UserGoalModel();
+                    defaultGoal.setUser(user);
+                    defaultGoal.setWeeklyGoal(0.0);
+                    defaultGoal.setDailyGoal(0.0);
+                    return userGoalRepository.save(defaultGoal);
+                });
     }
 
     private String getStatus(Double weekProgress, Double dailyProgress) {

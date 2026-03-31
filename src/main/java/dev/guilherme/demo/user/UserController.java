@@ -1,17 +1,14 @@
 package dev.guilherme.demo.user;
 
-
 import dev.guilherme.demo.user.dtos.UpdateUserDTO;
 import dev.guilherme.demo.user.dtos.UserDTO;
 import dev.guilherme.demo.user.dtos.UserResponseDTO;
+import dev.guilherme.demo.user.usergoal.UserGoalService;
 import dev.guilherme.demo.user.usergoal.dtos.GoalResponseDTO;
 import dev.guilherme.demo.user.usergoal.dtos.GoalUpdateDTO;
-import dev.guilherme.demo.user.usergoal.UserGoalService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-
 import jakarta.validation.Valid;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -58,7 +55,6 @@ public class UserController {
         return ResponseEntity.noContent().build();
     }
 
-
     @PutMapping("/goals")
     public ResponseEntity<GoalResponseDTO> updateGoal(@RequestBody GoalUpdateDTO dto) {
         return ResponseEntity.ok(userGoalService.updateGoal(dto));
@@ -67,6 +63,12 @@ public class UserController {
     @GetMapping("/goals")
     public ResponseEntity<GoalResponseDTO> getGoal() {
         return ResponseEntity.ok(userGoalService.getCurrentGoal());
+    }
+
+    @DeleteMapping("/goals")
+    public ResponseEntity<Void> deleteGoal() {
+        userGoalService.deleteGoal();
+        return ResponseEntity.noContent().build();
     }
 
     private UserResponseDTO toDto(UserModel user) {
