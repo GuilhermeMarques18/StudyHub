@@ -5,6 +5,7 @@ import dev.guilherme.demo.auth.dtos.AuthRefreshDTO;
 import dev.guilherme.demo.auth.dtos.AuthResponseDTO;
 import dev.guilherme.demo.auth.dtos.ChangePasswordDTO;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.*;
@@ -17,16 +18,14 @@ import dev.guilherme.demo.user.UserService;
 
 @RestController
 @RequestMapping("/auth")
+@RequiredArgsConstructor
 public class AuthController {
 
-    @Autowired
-    private UserService userService;
+    private final UserService userService;
 
-    @Autowired
-    private AuthenticationManager authenticationManager;
+    private final AuthenticationManager authenticationManager;
 
-    @Autowired
-    private AuthService authService;
+    private final AuthService authService;
 
     @PostMapping("/register")
     public ResponseEntity<UserResponseDTO> register(@RequestBody UserDTO userDTO) {
