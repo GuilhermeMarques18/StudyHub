@@ -1,13 +1,11 @@
 package dev.guilherme.demo.group;
 
-
 import dev.guilherme.demo.group.dtos.GroupDTO;
 import dev.guilherme.demo.group.dtos.GroupJoinDTO;
 import dev.guilherme.demo.group.dtos.GroupResponseDTO;
 import dev.guilherme.demo.group.dtos.MemberResponseDTO;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -18,9 +16,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class GroupController {
 
-    @Autowired
-    private GroupService groupService;
-
+    private final GroupService groupService;
 
     @PostMapping
     public ResponseEntity<GroupResponseDTO> saveGroup(@Valid @RequestBody GroupDTO dto){
@@ -31,6 +27,7 @@ public class GroupController {
     public ResponseEntity<GroupResponseDTO> join(@Valid @RequestBody GroupJoinDTO dto){
         return ResponseEntity.ok(groupService.joinGroup(dto));
     }
+
     @GetMapping("/mine")
     public ResponseEntity<List<GroupResponseDTO>> getMyGroups() {
         return ResponseEntity.ok(groupService.getMyGroups());
@@ -53,4 +50,17 @@ public class GroupController {
         return ResponseEntity.ok(groupService.promoteToAdmin(groupId, memberId));
     }
 
+    @DeleteMapping("/{groupId}/leave")
+    public ResponseEntity<Void> leaveGroup(@PathVariable Long groupId) {
+        groupService.leaveGroup(groupId);
+        return ResponseEntity.noContent().build();
+    }
+
+    @DeleteMapping("/{groupId}/members/{memberId}")
+    public ResponseEntity<Void> removeMember(
+            @PathVariable Long groupId,
+            @PathVariable Long memberId) {
+        groupService.removeMember(groupId, memberId);
+        return ResponseEntity.noContent().build();
+    }
 }

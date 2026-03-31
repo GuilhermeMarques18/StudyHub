@@ -1,15 +1,19 @@
 package dev.guilherme.demo.group;
+
 import dev.guilherme.demo.group.dtos.GroupDTO;
 import dev.guilherme.demo.group.dtos.GroupJoinDTO;
 import dev.guilherme.demo.group.dtos.GroupResponseDTO;
 import dev.guilherme.demo.group.dtos.MemberResponseDTO;
+import dev.guilherme.demo.group.exception.GroupAccessDeniedException;
+import dev.guilherme.demo.group.exception.InvalidGroupActionException;
+import dev.guilherme.demo.group.exception.ResourceNotFoundException;
 import dev.guilherme.demo.study.group.StudyGroupModel;
 import dev.guilherme.demo.study.group.StudyGroupRepository;
 import dev.guilherme.demo.user.UserModel;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -34,7 +38,6 @@ public class GroupService {
 
         StudyGroupModel saved = groupRepository.save(group);
 
-
         memberRepository.save(GroupMember.builder()
                 .group(saved)
                 .user(creator)
@@ -52,7 +55,6 @@ public class GroupService {
     }
 
     public List<GroupResponseDTO> getPublicGroups() {
-        UserModel user = getCurrentUser();
         return groupRepository.findByIsPrivateFalse()
                 .stream().map(this::toResponse)
                 .collect(Collectors.toList());
@@ -60,11 +62,12 @@ public class GroupService {
 
     public GroupResponseDTO joinGroup(GroupJoinDTO dto) {
         UserModel user = getCurrentUser();
+
         StudyGroupModel group = groupRepository.findById(dto.groupId())
-                .orElseThrow(() -> new RuntimeException("Grupo não encontrado"));
+                .orElseThrow(() -> new ResourceNotFoundException("Grupo não encontrado"));
 
         if (memberRepository.findByGroupIdAndUserId(group.getId(), user.getId()).isPresent()) {
-            throw new RuntimeException("Já é membro");
+            throw new InvalidGroupActionException("Você já pertence a esse grupo");
         }
 
         memberRepository.save(GroupMember.builder()
@@ -80,7 +83,7 @@ public class GroupService {
         UserModel user = getCurrentUser();
 
         if (memberRepository.findByGroupIdAndUserId(groupId, user.getId()).isEmpty()) {
-            throw new RuntimeException("Acesso negado ao grupo");
+            throw new GroupAccessDeniedException("Acesso negado: você não pertence a este grupo");
         }
 
         return memberRepository.findByGroupIdOrderByJoinedDate(groupId)
@@ -89,21 +92,48 @@ public class GroupService {
                 .collect(Collectors.toList());
     }
 
-
-    @Transactional
     public MemberResponseDTO promoteToAdmin(Long groupId, Long memberId) {
         UserModel user = getCurrentUser();
+
         GroupMember member = memberRepository.findById(memberId)
-                .orElseThrow(() -> new RuntimeException("Membro não encontrado"));
+                .orElseThrow(() -> new ResourceNotFoundException("Membro não encontrado"));
 
+        if (!member.getGroup().getId().equals(groupId)) {
+            throw new InvalidGroupActionException("O membro não pertence a este grupo");
+        }
 
-        if (member.getRole() == GroupMember.Role.ADMIN ||
-                !isGroupAdmin(groupId, user.getId())) {
-            throw new RuntimeException("Permissão negada");
+        if (member.getRole() == GroupMember.Role.ADMIN || !isGroupAdmin(groupId, user.getId())) {
+            throw new GroupAccessDeniedException("Permissão negada ou o usuário já é um administrador");
         }
 
         member.setRole(GroupMember.Role.ADMIN);
         return toMemberResponse(memberRepository.save(member));
+    }
+
+    public void leaveGroup(Long groupId) {
+        UserModel user = getCurrentUser();
+
+        GroupMember member = memberRepository.findByGroupIdAndUserId(groupId, user.getId())
+                .orElseThrow(() -> new ResourceNotFoundException("Você não é membro deste grupo"));
+
+        memberRepository.delete(member);
+    }
+
+    public void removeMember(Long groupId, Long memberId) {
+        UserModel user = getCurrentUser();
+
+        if (!isGroupAdmin(groupId, user.getId())) {
+            throw new GroupAccessDeniedException("Acesso negado: apenas administradores podem remover membros");
+        }
+
+        GroupMember memberToRemove = memberRepository.findById(memberId)
+                .orElseThrow(() -> new ResourceNotFoundException("Membro não encontrado"));
+
+        if (!memberToRemove.getGroup().getId().equals(groupId)) {
+            throw new InvalidGroupActionException("O membro não pertence a este grupo");
+        }
+
+        memberRepository.delete(memberToRemove);
     }
 
     private boolean isGroupAdmin(Long groupId, Long userId) {
@@ -123,7 +153,7 @@ public class GroupService {
     }
 
     private GroupResponseDTO toResponse(StudyGroupModel group) {
-        Long memberCount = Long.valueOf(memberRepository.findByGroupId(group.getId()).size());
+        Long memberCount = memberRepository.countByGroupId(group.getId());
         return new GroupResponseDTO(
                 group.getId(),
                 group.getName(),
