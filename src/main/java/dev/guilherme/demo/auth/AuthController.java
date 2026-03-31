@@ -1,6 +1,5 @@
 package dev.guilherme.demo.auth;
 
-
 import dev.guilherme.demo.auth.dtos.AuthDTO;
 import dev.guilherme.demo.auth.dtos.AuthRefreshDTO;
 import dev.guilherme.demo.auth.dtos.AuthResponseDTO;

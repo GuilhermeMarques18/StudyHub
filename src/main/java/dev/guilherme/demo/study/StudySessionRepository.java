@@ -34,4 +34,11 @@ public interface StudySessionRepository extends JpaRepository<StudySessionModel,
     Integer getDailyMinutes(@Param("userId") Long userId,
                          @Param("startOfDay") LocalDateTime startOfDay,
                          @Param("endOfDay") LocalDateTime endOfDay);
+
+    Long countByUserId(Long userId);
+
+    @Query("SELECT DISTINCT DATE(s.startTime) FROM StudySessionModel s " +
+            "WHERE s.user.id = :userId AND s.startTime >= :limitDate " +
+            "ORDER BY DATE(s.startTime) DESC")
+    List<java.sql.Date> findStudyDatesByUser(@Param("userId") Long userId, @Param("limitDate") LocalDateTime limitDate);
 }
